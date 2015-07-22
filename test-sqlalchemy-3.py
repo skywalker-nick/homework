@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import random
 import time
 
-DB_PATH = 'mysql://root:6cead92a385e4997@192.168.247.188/remote_mgmt'
+DB_PATH = 'mysql://root:password@127.0.0.1/remote_mgmt'
 
 Base = declarative_base()
 
@@ -63,8 +63,18 @@ class IpmiDBHelper(object):
 if __name__ == '__main__':
     db_engine = IpmiDBHelper()
     session = db_engine.db_session()
+    result = None
 
     with session.begin(subtransactions=True):
-        query = session.query(Host).filter_by(id='1111222233334444').one()
+        #query = session.query(Host).filter_by(id='1').one()
+        query = session.query(Host).filter(Host.port>=130)
+        for obj in query:
+            #obj.port = obj.port+10
+            #print obj
+            session.delete(obj)
 
-    print 'query: ' + str(query) + '\n\n'
+        #for i in range(2, 12):
+        #    host = Host('%s' % i, '127.0.0.1', 'abc', 123+i, 'abc', 'root', 'pass')
+        #    result = session.add(host)
+
+    #print 'query: ' + str(query) + '\n\n'

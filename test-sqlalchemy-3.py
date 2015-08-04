@@ -67,14 +67,14 @@ if __name__ == '__main__':
 
     with session.begin(subtransactions=True):
         #query = session.query(Host).filter_by(id='1').one()
-        query = session.query(Host).filter(Host.port>=130)
+        query = session.query(Host).filter(Host.port>=12)
         for obj in query:
             #obj.port = obj.port+10
-            #print obj
-            session.delete(obj)
+            print obj
+            #session.delete(obj)
 
-        #for i in range(2, 12):
-        #    host = Host('%s' % i, '127.0.0.1', 'abc', 123+i, 'abc', 'root', 'pass')
+        #for i in range(20, 32):
+        #    host = Host('%s' % i, '127.0.0.1', 'abc', 153+i, 'abc', 'root', 'pass')
         #    result = session.add(host)
 
     #print 'query: ' + str(query) + '\n\n'

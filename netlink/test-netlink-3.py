@@ -1,3 +1,6 @@
+from __future__ import print_function, unicode_literals, division 
+from future_builtins import *
+
 import socket
 import struct
 import pprint
@@ -126,6 +129,10 @@ def get_iface():
             "payload": payload,
             "attrs": attrs
             }
-    
 
-pprint.pprint(get_iface())
+def prettify(message):
+#    message['attrs'][0]['payload'] = message['attrs'][0]['payload'].decode('UTF-8')
+    pprint.pprint(message)
+
+prettify(get_iface())
+

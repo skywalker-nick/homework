@@ -11,13 +11,16 @@ enum {
         __NL_ACT_MAX,
 };
 
+
+// nl_msgtype[]
+// {Netlink_Message_ID, Cache_Action, Name_of_Operation}
 #define GENL_FAMILY(id, name) \
         { \
                 { id, NL_ACT_UNSPEC, name }, \
                 END_OF_MSGTYPES_LIST, \
         }
 
-
+// Done
 
 #define NLMSG_ALIGNTO   4U
 #define NLMSG_ALIGN(len) ( ((len)+NLMSG_ALIGNTO-1) & ~(NLMSG_ALIGNTO-1) )

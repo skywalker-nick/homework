@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals, division 
 from future_builtins import *
 
+import binascii
 import os
 import socket
 import struct
@@ -10,8 +11,33 @@ import cStringIO
 NETLINK_GENERIC = 16
 NETLINK_ROUTE = 0
 RTM_GETROUTE = 26
+RTM_GETRULE = 34
+
+RTPROT_BOOT = 3
 RT_SCOPE_UNIVERSE = 0
+RT_SCOPE_LINK = 253
+RT_SCOPE_HOST = 254
 RT_TABLE_DEFAULT = 253
+
+# routing message attr types
+RTA_UNSPEC = 0
+RTA_DST = 1
+RTA_SRC = 2
+RTA_IIF = 3
+RTA_OIF = 4
+RTA_GATEWAY = 5
+RTA_PRIORITY = 6
+RTA_PREFSRC = 7
+RTA_METRICS = 8
+RTA_MULTIPATH = 9
+RTA_PROTOINFO = 10
+RTA_FLOW = 11
+RTA_CACHEINFO = 12
+RTA_SESSION = 13
+RTA_MP_ALGO = 14
+RTA_TABLE = 15
+RTA_MARK = 16
+RTA_MFC_STATS = 17
 
 F_REQUEST = 1
 F_ROOT = 0x100
@@ -93,18 +119,15 @@ def parse_nlmsg(b):
     return parse_struct(b, nlmsg)
 
 #for GETROUTE
-rtmsg = (
-        ("family", "B"),
-        ("dst_len", "B"),
-        ("src_len", "B"),
-        ("tos", "B"),
-        ("table", "B"),
-        ("protocol", "B"),
-        ("scope", "B"),
-        ("type", "B"),
-        ("flags", "I")
-        )
-
+rtmsg = (("family", "B"),
+         ("dst_len", "B"),
+         ("src_len", "B"),
+         ("tos", "B"),
+         ("table", "B"),
+         ("protocol", "B"),
+         ("scope", "B"),
+         ("type", "B"),
+         ("flags", "I"))
 
 def new_rtmsg(d):
     return new_struct(d, rtmsg)
@@ -112,9 +135,45 @@ def new_rtmsg(d):
 def parse_rtmsg(b):
     return parse_struct(b, rtmsg)
 
-def route_message(payload, seq):
-    hdr = new_nlmsg(RTM_GETROUTE, payload, seq, flags=F_REQUEST|F_DUMP)
+def parse_rtattr(payload):
+    s = ''
+    for char in payload:
+        s = s + str(int(binascii.b2a_hex(char), 16)) + '.'
+    return s[:len(s)-1]
+
+def route_message(command, payload, seq):
+    hdr = new_nlmsg(command, payload, seq, flags=F_REQUEST|F_DUMP)
     return hdr
+
+def get_route_table():
+    con = new_conn(NETLINK_ROUTE)
+    hdr = new_rtmsg({'family': 0,
+                     'dst_len': 0,
+                     'src_len': 0,
+                     'tos': 0,
+                     'table': RT_TABLE_DEFAULT,
+                     'protocol': 0,
+                     'scope': RT_SCOPE_UNIVERSE,
+                     'type': 0,
+                     'flags': 0})
+    payload = route_message(RTM_GETROUTE, hdr, 0x12345)
+
+    con.send(payload) 
+    d = con.recv(4096)
+    b = cStringIO.StringIO(d)
+    msg = parse_nlmsg(b)
+    mlen = b.tell() - 16 + msg["len"]
+    payload = parse_rtmsg(b)
+    attrs = parse_attrs(b, mlen)
+
+    for atr in attrs:
+        atr['payload_t'] = parse_rtattr(atr['payload'])
+
+    return {
+            "msg": msg,
+            "payload": payload,
+            "attrs": attrs
+            }
 
 def get_routes():
     con = new_conn(NETLINK_ROUTE)
@@ -127,13 +186,10 @@ def get_routes():
                      'scope': RT_SCOPE_UNIVERSE,
                      'type': 0,
                      'flags': 0})
-    payload = route_message(hdr, 0x12345)
+    payload = route_message(RTM_GETRULE, hdr, 0x12345)
 
-    con.send(payload) 
+    con.send(payload)
     d = con.recv(4096)
-
-    prettify(d)
-
     b = cStringIO.StringIO(d)
     msg = parse_nlmsg(b)
     mlen = b.tell() - 16 + msg["len"]
@@ -148,5 +204,5 @@ def get_routes():
 def prettify(message):
     pprint.pprint(message)
 
-prettify(get_routes())
+prettify(get_route_table())
 

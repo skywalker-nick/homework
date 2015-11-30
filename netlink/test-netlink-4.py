@@ -195,6 +195,10 @@ def get_routes():
     mlen = b.tell() - 16 + msg["len"]
     payload = parse_rtmsg(b)
     attrs = parse_attrs(b, mlen)
+
+    for atr in attrs:
+        atr['payload_t'] = parse_rtattr(atr['payload'])
+
     return {
             "msg": msg,
             "payload": payload,
@@ -204,5 +208,7 @@ def get_routes():
 def prettify(message):
     pprint.pprint(message)
 
+print("\nPrint Default Route Table:\n")
 prettify(get_route_table())
-
+print("\nPrint Default Route Rule:\n")
+prettify(get_routes())

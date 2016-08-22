@@ -25,16 +25,9 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-for i in range(20):
-    user = User(name='abc-%s' % str(i), fullname='ABC-%s' % str(i), password='edspassword')
-    session.add(user)
-session.commit()
-
 print 'start query'
 session = Session()
-q = session.query(User)
-print 'start filter'
-t = q.filter_by(name='abc-11')
+q = session.query(User).all()
 print 'start print'
-for i in t:
-    print t
+for t in q:
+    print t.name

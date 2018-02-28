@@ -10,7 +10,7 @@ def binaryTranslate(decimal):
     while x > 0:
         y = x % 2
         s.push(y)
-        x = x / 2
+        x = x // 2
 
     while not s.empty():
         print(s.pop())
